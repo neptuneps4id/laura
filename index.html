@@ -482,11 +482,12 @@
     position:fixed; inset:0;
     background:#fdf6f1;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; padding:0 8vw;
+    text-align:center; padding:4vh 8vw;
     opacity:0; pointer-events:none;
     transition:opacity 1.6s ease;
     z-index:200;
-    overflow:hidden;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
   }
   #final.show{ opacity:1; pointer-events:auto; }
 
@@ -531,12 +532,12 @@
 
   .final-line{
     font-family:'Dancing Script', cursive;
-    font-size:clamp(1.8rem, 8vw, 2.6rem);
+    font-size:clamp(1.6rem, 7vw, 2.6rem);
     color:#7a2e45;
     text-shadow:0 0 16px rgba(217,163,95,0.15);
     margin:0;
     opacity:0;
-    line-height:1.4;
+    line-height:1.35;
   }
   .final-line.show-in{
     animation:finalLineIn 1s ease forwards;
@@ -987,16 +988,25 @@
     typeLine();
   }
 
+  let captionTimer = null;
   function onPetalTap(wrap){
     wrap.classList.add('gone');
     playPop();
     remaining--;
     const phrase = phrases[tapIndex % phrases.length];
     tapIndex++;
+
+    // Cancel any fade still in flight so rapid taps never overlap
+    if(captionTimer){ clearTimeout(captionTimer); captionTimer = null; }
     caption.style.opacity = 0;
-    setTimeout(()=>{
+    captionTimer = setTimeout(()=>{
       caption.textContent = phrase;
+      // Force a reflow before fading back in so the browser always
+      // registers the opacity change as a fresh transition (mobile
+      // browsers can otherwise batch/skip it and show a flash of both texts)
+      void caption.offsetWidth;
       caption.style.opacity = 1;
+      captionTimer = null;
     }, 250);
     updateCounter();
 
